@@ -1,5 +1,5 @@
 /*
-   Name : SVD with BY-Processing
+   Name : SVD_bystmt.sas
    Author : Liang Xie
    Purpose : Conduct SVD with BY-Processing capability, output U, S, V
    Date :  Dec 8, 2014
