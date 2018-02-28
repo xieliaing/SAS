@@ -1,0 +1,364 @@
+libname usc2000 "C:\Documents and Settings\Liang Xie\My Documents\My Project\Decker Nursing School Data Project";
+
+start get_ctsp(Hlocation);
+  numrow=nrow(Hlocation);
+  Hloca1=Hlocation[1:(numrow-1)];
+  Hloca2=Hlocation[2:numrow];
+  diff=Hloca2-Hloca1;
+  ctsp=diff[<>];
+  return (ctsp);
+finish;
+
+start process(m, n, d, ctsp, Hvar);
+  use usc2000.pums_ak;
+  ctsp=ctsp;
+  HVar=HVar;
+  range=m:n;
+  read point range var _char_ into VarTemp;
+  colVT=ncol(VarTemp);
+  colH=107; colP=colVT-colH;
+  colTotal=colH+colP*ctsp;
+  
+  Dest=J(d, colTotal,VarTemp[1,2]);
+  colPos=0;
+
+  step=0; orderp=2;
+  do j=1 to (n-m+1);
+  
+    RecType=HVar[m+j-1];
+    if RecType='H' then do;
+	  step=step+1;
+      Dest[step, 1:colH] = VarTemp[j, 1:colH];
+	  colPos=colH+1;
+    end; /* if then */
+    else do;
+      Dest[step, colPos:(colPos+colP-1)]=VarTemp[j, (colH+1):colVT];
+	  colPos=colPos+colP;
+    end;  /* if else */
+	
+  end; /* do */
+  
+  if m=1 then do;
+    create usc2000.newpums_ak from Dest;
+    append from Dest;
+  end;
+  else do;
+    use usc2000.newpums_ak;
+	append from Dest;
+  end;
+  free Dest VarTemp;
+finish;
+  
+
+
+use usc2000.pums_ak;
+read all var {rectype} into HVar;
+
+hpos=loc(HVar='H')`;
+ctsp=get_ctsp(hpos);
+
+totalobs=nrow(HVar);
+rowhpos=nrow(hpos);
+colhpos=ncol(hpos);
+print ctsp rowhpos colhpos;
+
+j=0;
+m=1;
+interval=400;
+do i=1 to rowhpos by interval;
+   if (i+interval)<rowhpos then do;
+      n=hpos[i+interval]-1;  
+	  d=interval;
+	  print "interior solution", i m n;
+	  printnow;
+   end;
+   else do;
+      d=rowhpos-i+1;
+	  n=totalobs;
+	  print "Last Process", i m n d;
+   end;
+   lasti=i;
+   call process(m,n, d, ctsp, HVar);
+   m=n+1;    /*locate the beginning point of next round*/
+   
+end;  /* do */
+
+
+print "Finish! Last Parameters";
+print i m n;
+close usc2000.newpums_ak;
+free /;
+
+/*
+submit;
+ data xdata.newpums_ak;   
+   set xdata.newpums_ak;
+   label                                                                              
+                                                                                
+  RECTYPE = "Record Type"                                                          
+  SERIALNO = "Housing/Group Quarters (GQ) Unit Serial Number"                      
+  SAMPLE = "Sample Identifier"                                                     
+  STATE = "State (FIPS)"                                                           
+  REGION = "Region"                                                                
+  DIVISION = "Division"                                                            
+  PUMA1 = "Super Public Use Microdata Area Code (SuperPUMA)"                       
+  MSACMSA1 = "Metropolitan Area:MSA/CMSA for SuperPUMA"                            
+  MSAPMSA1 = "Metropolitan Area:MSA/PMSA for SuperPUMA"                            
+  AREATYP1 = "Metropolitan Area:SuperPUMA Relationship to MA"                      
+  TOTPUMA1 = "Total Area of SuperPUMA"                                             
+  LNDPUMA1 = "Land Area of SuperPUMA"                                              
+  SUBSAMPL = "Subsample Number"                                                    
+  HWEIGHT = "Housing Unit Weight"                                                  
+  PERSONS = "Number of Person Records Following This Housing Record"               
+  UNITTYPE = "Type of Unit"                                                        
+  HSUB = "Substitution Flag"                                                       
+  HAUG = "Augmentation Flag"                                                       
+  VACSTAT = "Vacancy Status"                                                       
+  VACSTATA = "Vacancy Status Allocation Flag"                                      
+  TENURE = "Home Ownership"                                                        
+  TENUREA = "Home Ownership Allocation Flag"                                       
+  BLDGSZ = "Size of Building"                                                      
+  BLDGSZA = "Size of Building Allocation Flag"                                     
+  YRBUILT = "Year Building Built"                                                  
+  YRBUILTA = "Year Building Built Allocation Flag"                                 
+  YRMOVED = "Year Moved In"                                                        
+  YRMOVEDA = "Year Moved In Allocation Flag"                                       
+  ROOMS = "Number of Rooms"                                                        
+  ROOMSA = "Number of Rooms Allocation Flag"                                       
+  BEDRMS = "Number of Bedrooms"                                                    
+  BEDRMSA = "Number of Bedrooms Allocation Flag"                                   
+  CPLUMB = "Complete Plumbing Facilities"                                          
+  CPLUMBA = "Complete Plumbing Facilities Allocation Flag"                         
+  CKITCH = "Complete Kitchen Facilities"                                           
+  CKITCHA = "Complete Kitchen Facilities Allocation Flag"                          
+  PHONE = "Telephone Availability"                                                 
+  PHONEA = "Telephone Availability Allocation Flag"                                
+  FUEL = "Heating Fuel"                                                            
+  FUELA = "Heating Fuel Allocation Flag"                                           
+  VEHICL = "Number of Vehicles Available"                                          
+  VEHICLA = "Number of Vehicles Available Allocation Flag"                         
+  BUSINES = "Commercial Business on Property"                                      
+  BUSINESA = "Commercial Business on Property Allocation Flag"                     
+  ACRES = "Acreage"                                                                
+  ACRESA = "Acreage Allocation Flag"                                               
+  AGSALES = "Sales of Agricultural Products in 1999"                               
+  AGSALESA = "Sales of Agricultural Products in 1999 Allocation Flag"              
+  ELEC = "Cost of Electricity (annual)"                                            
+  ELECA = "Cost of Electricity (annual) Allocation Flag"                           
+  GAS = "Cost of Gas (annual)"                                                     
+  GASA = "Cost of Gas (annual) Allocation Flag"                                    
+  WATER = "Cost of Water and Sewage (annual)"                                      
+  WATERA = "Cost of Water and Sewage (annual) Allocation Flag"                     
+  OIL = "Cost of Oil, Kerosene, or Wood (annual)"                                  
+  OILA = "Cost of Oil, Kerosene, or Wood (annual) Allocation Flag"                 
+  RENT = "Monthly Rent"                                                            
+  RENTA = "Monthly Rent Allocation Flag"                                           
+  MEALS = "Meals Included in Rent"                                                 
+  MEALSA = "Meals Included in Rent Allocation Flag"                                
+  MORTG1 = "Mortgage Status"                                                       
+  MORTG1A = "Mortgage Status Allocation Flag"                                      
+  MRT1AMT = "Mortgage Payment (monthly amount)"                                    
+  MRT1AMTA = "Mortgage Payment (monthly amount) Allocation Flag"                   
+  MORTG2 = "Second Mortgage Status"                                                
+  MORTG2A = "Second Mortgage Status Allocation Flag"                               
+  MRT2AMT = "Second Mortgage Payment (monthly amount)"                             
+  MRT2AMTA = "Second Mortgage Payment (monthly amount) Allocation Flag"            
+  TAXINCL = "Property Tax Status"                                                  
+  TAXINCLA = "Property Tax Status Allocation Flag"                                 
+  TAXAMT = "Property Tax Amount (annual)"                                          
+  TAXAMTA = "Property Tax Amount (annual) Allocation Flag"                         
+  INSINCL = "Property Insurance Status"                                            
+  INSINCLA = "Property Insurance Status Allocation Flag"                           
+  INSAMT = "Property Insurance Amount (annual)"                                    
+  INSAMTA = "Property Insurance Amount (annual) Allocation Flag"                   
+  CONDFEE = "Condominium Fee (monthly)"                                            
+  CONDFEEA = "Condominium Fee (monthly) Allocation Flag"                           
+  VALUE = "Property Value"                                                         
+  VALUEA = "Property Value Allocation Flag"                                        
+  MHLOAN = "Mobile Home Loan Status"                                               
+  MHLOANA = "Mobile Home Loan Status Allocation Flag"                              
+  MHCOST = "Mobile Home Costs"                                                     
+  MHCOSTA = "Mobile Home Costs Allocation Flag"                                    
+  HHT = "Household/Family Type"                                                    
+  P65 = "Number of People 65 Years and Over in Household"                          
+  P18 = "Number of People Under 18 Years in Household"                             
+  NPF = "Number of People in Family"                                               
+  NOC = "Number of Own Children Under 18 Years in Household"                       
+  NRC = "Number of Related Children Under 18 Years in Household"                   
+  PSF = "Presence of Subfamily in Household"                                       
+  PAOC = "Presence and Age of Own Children Under 18 Years"                         
+  PARC = "Presence and Age of Related Children Under Years"                        
+  SVAL = "Specified Value Indicator"                                               
+  SMOC = "Selected Monthly Owner Costs"                                            
+  SMOCAPI = "Selected Monthly Owner Costs as a Percentage of Household Income"     
+  SRNT = "Specified Rent Indicator"                                                
+  GRENT = "Gross Rent"                                                             
+  GRAPI = "Gross Rent as a Percentage of Household Income"                         
+  FNF = "Fam/Nonfam Recode"                                                        
+  HHL = "Household Language"                                                       
+  LNGI = "Linguistic Isolation"                                                    
+  WIF = "Number of Workers in Family"                                              
+  EMPSTAT = "Family Type and Employment Status"                                    
+  WORKEXP = "Family Type and Work Experience of Householder"                       
+  HINC = "Household Total Income in 1999"                                          
+  FINC = "Family Total Income in 1999"                                             
+
+
+  PNUM = "Person Sequence Number"                                                  
+  PAUG = "Augmented Person Flag"                                                   
+  DDP = "Data-defined Person Flag"                                                 
+  PWEIGHT = "Person Weight"                                                        
+  RELATE = "Relationship"                                                          
+  RELATEA = "Relationship Allocation Flag"                                         
+  OC = "Own Child Indicator"                                                       
+  RC = "Related Child Indicator"                                                   
+  PAOCF = "Presence and Age of Own Children, Females"                              
+  SEX = "Sex"                                                                      
+  SEXA = "Sex Allocation Flag"                                                     
+  AGE = "Age"                                                                      
+  AGEA = "Age Allocation Flag"                                                     
+  HISPAN = "Hispanic or Latino Origin"                                             
+  HISPANA = "Hispanic or Lationo Origin Allocation Flag"                           
+  NUMRACE = "Number of Major Race Groups Marked"                                   
+  WHITE = "White recode"                                                           
+  BLACK = "Black or African American recode"                                       
+  AIAN = "American Indian and Alaska Native recode"                                
+  ASIAN = "Asian recode"                                                           
+  NHPI = "Native Hawaiian and Other Pacific Islanders recode"                      
+  OTHER = "Some other race recode"                                                 
+  RACE1 = "Race Recode 1"                                                          
+  RACE2 = "Race Recode 2"                                                          
+  RACE3 = "Race Recode 3"                                                          
+  RACEA = "Race Allocation Flag"                                                   
+  MARSTAT = "Marital Status"                                                       
+  MARSTATA = "Marital Status Allocation Flag"                                      
+  MSP = "Married, Spouse Present Recode"                                           
+  SFN = "Subfamily Number for this Person"                                         
+  SFREL = "Subfamily Relationship"                                                 
+  ENROLL = "School Enrollment: Attended since February 1, 2000"                    
+  ENROLLA = "School Enrollment: Attended since February 1, 2000 Allocation Flag"   
+  GRADE = "School Enrollment: Grade Level Attending"                               
+  GRADEA = "School Enrollment: Grade Level Attending Allocation Flag"              
+  EDUC = "Educational Attainment"                                                  
+  EDUCA = "Educational Attainment Allocation Flag"                                 
+  ANCFRST1 = "Ancestry Code 1 for 1-Percent File"                                  
+  ANCSCND1 = "Ancestry Code 2 for 1-Percent File"                                  
+  ANCA = "Ancestry Allocation Flag"                                                
+  ANCR = "Ancestry Recode"                                                         
+  SPEAK = "Non-English Language"                                                   
+  SPEAKA = "Non-English Language Allocation Flag"                                  
+  LANG1 = "Language Spoken for 1-Percent File"                                     
+  LANGA = "Language Spoken for 1-Percent File Allocation Flag"                     
+  ENGABIL = "English Ability"                                                      
+  ENGABILA = "English Ability Allocation Flag"                                     
+  POB1 = "Place of Birth for 1-Percent File"                                       
+  POBA = "Place of Birth for 1-Percent File Allocation Flag"                       
+  CITIZEN = "Citizenship Status"                                                   
+  CITIZENA = "Citizenship Status Allocation Flag"                                  
+  YR2US = "Year of Entry to United States"                                         
+  YR2USA = "Year of Entry to United States Allocation Flag"                        
+  MOB = "Residence 5 Years Ago"                                                    
+  MOBA = "Residence 5 Years Ago Allocation Flag"                                   
+  MIGST1 = "Migration State or Foreign Country Code for 1-Percent File"            
+  MIGPUMA1 = "Migration Super-PUMA"                                                
+  MIGAREA1 = "Migration Super-PUMA Relationship to MA"                             
+  MIGCMA1 = "Migration MA: MSA/CMSA for Migration Super-PUMA"                      
+  MIGPMA1 = "Migration MA: MSA/PMSA For Migration Super-PUMA"                      
+  SENSORY = "Sensory Disability"                                                   
+  SENSORYA = "Sensory Disability Allocation Flag"                                  
+  PHYSCL = "Physical Disability"                                                   
+  PHYSCLA = "Physical Disability Allocation Flag"                                  
+  MENTAL = "Mental Disability"                                                     
+  MENTALA = "Mental Disability Allocation Flag"                                    
+  SLFCARE = "Self-Care Disability"                                                 
+  SLFCAREA = "Self-Care Disability Allocation Flag"                                
+  ABGO = "Able to Go Out Disability"                                               
+  ABGOA = "Able to Go Out Disability Allocation Flag"                              
+  ABWORK = "Employment Disability"                                                 
+  ABWORKA = "Employment Disability Allocation Flag"                                
+  DISABLE = "Disability Recode"                                                    
+  GRANDC = "Presence of Grandchildren under 18 years"                              
+  GRANDCA = "Presence of Grandchildren under 18 years Allocation Flag"             
+  RSPNSBL = "Responsible for Grandchildren"                                        
+  RSPNSBLA = "Responsible for Grandchildren Allocation Flag"                       
+  HOWLONG = "Length of Responsibility for Grandchildren"                           
+  HOWLONGA = "Length of Responsibility for Grandchildren Allocation Flag"          
+  MILTARY = "Military Service"                                                     
+  MILTARYA = "Military Service Allocation Flag"                                    
+  VPS1 = "On active duty April 1995 or later"                                      
+  VPS2 = "On active duty August 1990-March 1995 (Incl. Persian Gulf War)"          
+  VPS3 = "On active duty September 1980-July 1990"                                 
+  VPS4 = "On active duty May 1975-August 1980"                                     
+  VPS5 = "On active duty during Vietnam Era: August 1964-April 1975"               
+  VPS6 = "On active duty February 1955-July 1964"                                  
+  VPS7 = "On active duty during Korean War: June 1950-January 1955"                
+  VPS8 = "On active duty during World War II: September 1940-July 1947"            
+  VPS9 = "On active duty any other time"                                           
+  VPSA = "Veterans Period of Service Alloction Flag"                               
+  MILYRS = "Years of Military Service"                                             
+  MILYRSA = "Years of Military Service Allocation Flag"                            
+  VPSR = "Veterans Period of Service Recode"                                       
+  ESR = "Employment Status Recode"                                                 
+  ESRA = "Employment Status Allocation Flag"                                       
+  ESP = "Employment Status of Parent(s)"                                           
+  POWST1 = "Place of Work State or Foreign Country Code for 1-Percent File"        
+  POWSTA = "Place of Work State or Foreign Country Code Allocation Flag"           
+  POWPUMA1 = "Place of Work Super-PUMA"                                            
+  POWAREA1 = "Place of Work Super-PUMA Relationship to MA"                         
+  POWCMA1 = "Place of Work MA: MSA/CMSA for Place of Work Super-PUMA"              
+  POWPMA1 = "Place of Work MA: MSA/PMSA for Place of Work Super-PUMA"              
+  TRVMNS = "Means of Transportation to Work"                                       
+  TRVMNSA = "Means of Transportation to Work Allocation Flag"                      
+  CARPOOL = "Vehicle Occupancy"                                                    
+  CARPOOLA = "Vehicle Occupancy Allocation Flag"                                   
+  LVTIME = "Time Leaving for Work"                                                 
+  LVTIMEA = "Time Leaving for Work Allocation Flag"                                
+  TRVTIME = "Travel Time to Work"                                                  
+  TRVTIMEA = "Travel Time to Work Allocation Flag"                                 
+  LAYOFF = "Layoff from Job"                                                       
+  ABSENT = "Absent from Work"                                                      
+  RECALL = "Return-to-Work Recall"                                                 
+  LOOKWRK = "Looking for Work"                                                     
+  BACKWRK = "Back to Work"                                                         
+  LASTWRK = "Year Last Worked"                                                     
+  LASTWRKA = "Year Last Worked Allocation Flag"                                    
+  INDCEN = "Industry (Census)"                                                     
+  INDCENA = "Industry (Census) Allocation Flag"                                    
+  INDNAICS = "Industry (NAICS)"                                                    
+  OCCCEN1 = "Occupation (Census) for 1-Percent File"                               
+  OCCCENA = "Occupation (Census) Allocation Flag"                                  
+  OCCSOC1 = "Occupation (SOC) for 1-Percent File"                                  
+  CLWKR = "Class of Worker"                                                        
+  CLWKRA = "Class of Worker Allocation Flag"                                       
+  WRKLYR = "Worked in 1999"                                                        
+  WRKLYRA = "Worked in 1999 Allocation Flag"                                       
+  WEEKS = "Weeks Worked in 1999"                                                   
+  WEEKSA = "Weeks Worked in 1999 Allocation Flag"                                  
+  HOURS = "Hours Per Week Worked in 1999"                                          
+  HOURSA = "Hours Per Week Worked in 1999 Allocation Flag"                         
+  INCWS = "Wage/Salary Income in 1999"                                             
+  INCWSA = "Wage/Salary Income in 1999 Allocation Flag"                            
+  INCSE = "Self-Employment Income in 1999"                                         
+  INCSEA = "Self-Employment Income in 1999 Allocation Flag"                        
+  INCINT = "Interest Income in 1999"                                               
+  INCINTA = "Interest Income in 1999 Allocation Flag"                              
+  INCSS = "Social Security Income in 1999"                                         
+  INCSSA = "Social Security Income in 1999 Allocation Flag"                        
+  INCSSI = "Supplemental Security Income in 1999"                                  
+  INCSSIA = "Supplemental Security Income in 1999 Allocation Flag"                 
+  INCPA = "Public Assistance Income in 1999"                                       
+  INCPAA = "Public Assistance Income in 1999 Allocation Flag"                      
+  INCRET = "Retirement Income in 1999"                                             
+  INCRETA = "Retirement Income in 1999 Allocation Flag"                            
+  INCOTH = "Other Income in 1999"                                                  
+  INCOTHA = "Other Income in 1999 Allocation Flag"                                 
+  INCTOT = "Persons Total Income in 1999"                                          
+  INCTOTA = "Persons Total Income in 1999 Allocation Flag"                         
+  EARNS = "Persons Total Earnings in 1999"                                         
+  POVERTY = "Persons Poverty Status"                                               
+  ;              
+ run;
+endsubmit;
+*/  
+  
+
