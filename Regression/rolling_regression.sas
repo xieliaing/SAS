@@ -44,6 +44,21 @@ Method 3 |  80.54 (seconds)   |   79.61 (seconds)       |  2322K
 
 Method 4 |         Failed           |           Failed               |    Failed
 =====================================================
+
+Reference:
+[1]MYSAS.NET, http://www.mysas.net/forum/viewtopic.php?f=4&t=8070
+[2]MYSAS.NET, http://www.mysas.net/forum/viewtopic.php?f=4&t=7898
+[3]SAS-L, http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0604D&L=sas-l&P=R32485
+[4]SAS-L, http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0704C&L=sas-l&P=R3305
+[5]SAS-L, http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0802C&L=sas-l&P=R9746
+[6]SAS-L, http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0801C&L=sas-l&P=R14671
+[7]SAS-L, http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0810A&L=sas-l&P=R19135
+[8]SAS-L, http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0802C&L=sas-l&P=R13489
+[9]Michael D Boldin, "Programming Rolling Regressions in SAS", Proceedings of NESUG, 2007
+[10]SAS-L, http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0604D&L=sas-l&D=0&P=56926
+[11]J. H. Goodnight, "The Sweep Operator: Its Importance in Statistical Computing", SAS Tech Report R-106, 1978
+[12]Kenneth Lange, "Numerical Analysis for Statisticians", Springer, 1998
+
 */
 proc datasets library=work kill; run;
 
