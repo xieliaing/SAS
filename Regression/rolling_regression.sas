@@ -1,3 +1,50 @@
+/*
+We demonstrate a comparison among various implementations of Rolling Regression in SAS and show that the 
+fastest implementation is over 3200X faster than traditional BY-processing approach.
+
+More often than not, we encounter a problem where an OLS over a rolling time window is required, 
+see [1], [2], [3], [4], [5], [6], [7], for a few examples.
+
+One solution is to resort to SAS MACRO, but it is extremely inefficient and can't handle large dataset 
+in reality, [8]. This method is shown below as Method[4]. It couldn't finish the test in allowable time using the sample data below.
+
+The other common solution is to use the BY-processing capability of PROC REG after re-shaping the 
+data into appropriate format, see [9], [10]. This method is demonstrated as Method[3] below. While 
+certainly much better than above one, it is still not the fastest and requires more memory.
+
+The third solution comes to play by recognizing that in OLS, what you need is the SSCP and you can 
+easily build up the SSCP over rolling time window by resorting to PROC EXPAND. This is demonstrated 
+as Method[2] below. This approach will further improve the speed but still requires large amount of 
+memory if the data is big and many rolling windows are generated.
+
+Since what we need to do is to build the SSCP matrix and obtain the coefficient estimates based on the 
+informaiton in SSCP, we can certainly code this in a DATA Step using ADJUST operator, which provides 
+a solution that is both fast and low memory occupancy. See [11] for an introduction to ADJUST operator. To 
+make this even faster, a modification of ADJUST operator, the SWEEP operator, can be used. For an 
+introduction to SWEEP operator, see [11], [12]. In the code below, Method[0] implements the ADJUST 
+operator, while Method[1] implements the SWEEP operator.
+
+The experiment literally runs 499980 regressions each with 20 observations and 2 predictors, and the 
+results are shown below:
+
+Real Time    |        CPU Time          | Memory                   
+=====================================================
+
+Method 0 |    1.01 (seconds)   |    1.01 (seconds)        |    611K
+
+
+Method 1 |    0.25 (seconds)   |    0.24 (seconds)        |    432K
+
+
+Method 2 |    1.61 (seconds)   |    0.94 (seconds)        | 50381K
+
+
+Method 3 |  80.54 (seconds)   |   79.61 (seconds)       |  2322K
+
+
+Method 4 |         Failed           |           Failed               |    Failed
+=====================================================
+*/
 proc datasets library=work kill; run;
 
 
