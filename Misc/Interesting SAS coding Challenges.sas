@@ -117,3 +117,35 @@ proc sql noprint;
 quit;
 
 %put &stmt;
+
+/*
+Hi Everyone,
+
+I want to use fixed effects to estimate a model, using GMM estimation and the model consists of simultaneous equations. I am using PROC MODEL (proc panel does not support simultaneous equations) and using dummy variable to control the fixed effects.
+Since there are 100+ dummy variables, does that mean I need to create 100+ parameters corresponding to these 100+ dummy variables? Is there any efficient way to add the dummy variables when using PROC MODEL? Generate 100+ parameters for the dummy variable is too much burden...
+Suppose the simultaneous eq. model is like this:
+
+y1=a0+a1*x1+a2*x2
+y2=b0+b1*x1+b2*x3
+
+After adding the dummy variables, the model will be like this??!!
+
+y1=a0+a1*x1+a2*x2+a3*col1+a4*col2+a5*col3+....a102*col100+...
+y2=b0+b1*x1+b2*x3+b3*col1+b4*col2+b5*col3+....b102*col100+...
+
+Is there any easy way to write the dummy variables and the corresponding parameters,  like col1-c100 in PROC MODEL?
+*/
+
+/*if you have SAS/STAT, use PROC GLMMOD, to output parameter  and associated column numbers and use SQL to create your statement:*/
+
+proc glmmod data=sashelp.cars outparm=parm;
+        class type;
+        model MPG_CITY=TYPE;
+run;
+
+proc sql noprint;
+        select cats('a', _colnum_, '*col', _colnum_) into :stmt separated by '+'
+        from    parm
+;
+quit;
+%put &stmt;
