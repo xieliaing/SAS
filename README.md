@@ -1,5 +1,5 @@
 # SAS
-This is the collection of my own SAS utility macros/ sample code over my 10 years of SAS programming and analysis experience from 2004 to 2014.
+This is the collection of my own SAS utility macros/ sample code over my 10 years of SAS programming and analysis experience from 2004 to 2014. I switched to more modern stack later. See my blog post on this: <https://sas-programming.blogspot.com/2013/12/sas-is-abandend-by-market-for-advanced.html> 
 
 I will try to organize my code/macros, mostly for analytic works, by functionality and area. Please note that all code is provided as it is. I don't have access to SAS now and I can't test any changes or provide support to make the code workable to SAS new versions.
 
